@@ -46,19 +46,18 @@ class PolData(object):
         # Extract mission and instrument info
         self.mission = hdu_evt['POLEVENTS'].header['TELESCOP']
         self.instrument = hdu_evt['POLEVENTS'].header['INSTRUME']
-        pha = hdu_evt['POLEVENTS'].data.field('ENERGY')
+#        pha = hdu_evt['POLEVENTS'].data.field('ENERGY') old definition
+        pha = hdu_evt['POLEVENTS'].data.field('CHANNEL')
 
         # non-zero ADC channels and correct energy range. Also bin the pha if using spectral response
         if 'ebounds' in locals():  # check if ebounds was defined
-            pha_mask1 = pha >= 0
-            pha_mask2 = (pha <= ebounds.max()) & (pha >= ebounds.min())
-            pha_mask= pha_mask1 & pha_mask2
+#            pha_mask2 = (pha <= ebounds.max()) & (pha >= ebounds.min())
+#            pha_mask= pha_mask1 & pha_mask2
             # bin the ADC channels
-            self.pha = np.digitize(pha[pha_mask1 & pha_mask2], ebounds)
+#            self.pha = np.digitize(pha[pha_mask1 & pha_mask2], ebounds)
             self.n_channels= len(self.rsp.ebounds) - 1
-        else:
-            pha_mask = (pha >= 0)
-        
+
+        pha_mask = (pha >= 0)
         # get the dead time fraction
         self.dead_time_fraction = (hdu_evt['POLEVENTS'].data.field('DEADFRAC'))[pha_mask]
 
