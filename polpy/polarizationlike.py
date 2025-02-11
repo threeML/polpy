@@ -399,13 +399,13 @@ class PolarizationLike(PluginPrototype):
 
             if self._background.is_poisson:
 
-                errors = np.sqrt((self._current_observed_counts / self._exposure) +
-                                 (self._current_background_counts / self._background_exposure))
+                errors = np.sqrt((self._current_observed_counts / self._exposure**2 / self.bin_widths**2) +
+                                 (self._current_background_counts / self._background_exposure**2/ self.bin_widths**2))
 
             else:
 
-                errors = np.sqrt((self._current_observed_counts / self._exposure) +
-                                 (self._current_background_count_errors / self._background_exposure)**2)
+                errors = np.sqrt((self._current_observed_counts / self._exposure**2 / self.bin_widths**2) +
+                                 (self._current_background_count_errors / self._background_exposure/ self.bin_widths)**2)
 
             ax.hlines(net_rate / self.bin_widths,
                       sa_min, sa_max, **data_kwargs)

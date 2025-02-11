@@ -46,29 +46,43 @@ class PolData(object):
         # Extract mission and instrument info
         self.mission = hdu_evt['POLEVENTS'].header['TELESCOP']
         self.instrument = hdu_evt['POLEVENTS'].header['INSTRUME']
-        pha = hdu_evt['POLEVENTS'].data.field('ENERGY')
-
-        # non-zero ADC channels and correct energy range. Also bin the pha if using spectral response
-        if 'ebounds' in locals():  # check if ebounds was defined
-            pha_mask1 = pha >= 0
-            pha_mask2 = (pha <= ebounds.max()) & (pha >= ebounds.min())
-            pha_mask= pha_mask1 & pha_mask2
-            # bin the ADC channels
-            self.pha = np.digitize(pha[pha_mask1 & pha_mask2], ebounds)
-            self.n_channels= len(self.rsp.ebounds) - 1
+        if 'ENERGY' in hdu_evt['POLEVENTS'].data.names:
+            pha = hdu_evt['POLEVENTS'].data.field('ENERGY')
+            # non-zero ADC channels and correct energy range. Also bin the pha if using spectral response
+            if 'ebounds' in locals():  # check if ebounds was defined
+                pha_mask1 = (pha > 0)
+                pha_mask2 = (pha <= ebounds.max()) & (pha >= ebounds.min())
+                pha_mask = pha_mask1 & pha_mask2
+                # bin the ADC channels is not needed anymore since we have channels already.
+                self.pha = np.digitize(pha[pha_mask], ebounds)
+                self.n_channels = len(self.rsp.ebounds) - 1
+            else:
+                pha_mask = (pha >= 0)
+            print("PHA:",self.pha)
         else:
-            pha_mask = (pha >= 0)
-        
+            pha = hdu_evt['POLEVENTS'].data.field('CHANNEL')
+            if 'ebounds' in locals():  # check if ebounds was defined
+                # bin the ADC channels is not needed anymore since we have channels already.
+                self.n_channels = len(self.rsp.ebounds) - 1
+                pha_mask = (pha >= 0)
+                self.pha = pha[pha_mask]
+            print("PHA:",self.pha)
+        print("length of pha:",self.n_channels)
         # get the dead time fraction
         self.dead_time_fraction = (hdu_evt['POLEVENTS'].data.field('DEADFRAC'))[pha_mask]
 
         # get the arrival time, in SECOND
         self.time = (hdu_evt['POLEVENTS'].data.field('TIME'))[pha_mask] - reference_time
-
+        
         # now do the scattering angles
         
         # there is some issue with applying the pha mask to this. Not consistent. To be checked !!
-        scattering_angles = hdu_evt['POLEVENTS'].data.field('SA')
+        if 'SA' in hdu_evt['POLEVENTS'].data.names:
+            scattering_angles = hdu_evt['POLEVENTS'].data.field('SA')
+            print("scattering angles :",scattering_angles)
+        else:
+            scattering_angles = hdu_evt['POLEVENTS'].data.field('SABIN')
+            print("scattering angles :",scattering_angles)
 
         # clear the bad scattering angles
         scat_angle_mask = scattering_angles != -1
@@ -180,4 +194,4 @@ class PolData(object):
         # Matrix to go from NED to XYZ
         return np.array([[-np.cos(theta) * np.cos(phi), -np.sin(phi), -np.sin(theta) * np.cos(phi)],
                               [-np.cos(theta) * np.sin(phi), np.cos(phi), -np.sin(theta) * np.sin(phi)],
-                              [np.sin(phi), 0, -np.cos(theta)]])
+                              [np.sin(theta), 0, -np.cos(theta)]])
