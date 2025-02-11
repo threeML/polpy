@@ -33,13 +33,14 @@ polar_spec.set_active_measurements('30-750')
 polar_spec.use_effective_area_correction(0.7, 1.3)
 
 # polarisation 
-polar_polarization_ts = TimeSeriesBuilder.from_polarization('polar_pol', polevents.as_posix(), polrsp.as_posix(),
-                                              specrsp, trigger_time=trigger_time)
-
-
+polar_polarization_ts = TimeSeriesBuilder.from_polarization('polar_pol', polevents.as_posix(), specrsp, 
+                                                            polrsp.as_posix(), trigger_time=trigger_time)
+# Offset to be added to convert templates from LTP to J2000
+# we put zero for now
+pa_offset = 0. # [0, 180] in deg
 polar_polarization_ts.set_background_interval('-35--10','25-75')
 polar_polarization_ts.set_active_time_interval('-0.2-8.9')
-polar_data = polar_polarization_ts.to_polarizationlike()
+polar_data = polar_polarization_ts.to_polarizationlike(pa_offset=0.)
 
 polar_data.use_effective_area_correction(0.7, 1.5)
 
