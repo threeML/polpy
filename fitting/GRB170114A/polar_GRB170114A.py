@@ -10,9 +10,9 @@ import warnings
 from threeML import *
 
 # data and responses
-data_path = Path(__file__).parent.parent.joinpath("data")
-polevents = data_path.joinpath("POLAR_170114A.pevt")
-polrsp = data_path.joinpath("POLAR_170114A.prsp")
+data_path = Path(__file__).parent.parent.parent.joinpath("data")
+polevents = data_path.joinpath("POLAR_170114A_NED.pevt_.fits")
+polrsp = data_path.joinpath("POLAR_170114A_NED.prsp_.fits")
 specrsp = data_path.joinpath("POLAR_170114A.rmfarf")
 
 trigger_time = 1484431269.5000
@@ -113,7 +113,7 @@ bayes.set_sampler("multinest")
 wrapped = [0] * len(model.free_parameters)
 wrapped[5] = 1
 
-bayes.sampler.setup(n_live_points=1000,
+bayes.sampler.setup(n_live_points=10,
                            resume = False,
                            importance_nested_sampling=False,
                            verbose=True,

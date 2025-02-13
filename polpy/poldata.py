@@ -107,7 +107,7 @@ class PolData(object):
         self._Y = self._Z.cross(self._X)
         
         # define the source axis vector
-        self._S = SkyCoord(RA_S, Dec_S, frame='icrs', obstime='J2000').cartesian
+        self._S = SkyCoord(RA_S, Dec_S, frame='icrs', obstime='J2000')
 
         # bin the scattering_angles
         if self.polrsp is not None:
@@ -129,8 +129,8 @@ class PolData(object):
 
 
     def get_pa_offset(self) -> float:
-        """ Compute the polarisation angle offset between local tangent frame and J2000 frame for
-        *this* instrument.
+        """ Compute the polarisation angle offset between local tangent frame and the X (North) axis of the IAU 
+        frame for *this* instrument.
         
         see docs for frame defn (add a link to docs)
 
@@ -138,26 +138,29 @@ class PolData(object):
             float: Polarisation angle offset between J2000 and local tangent frame.
         """
 
-        # get the two transformation matrices
-        R_IRF_J2000 = self._get_IRF_J2000_transform()
-        R_LTP_XYZ = self._get_LTP_IRF_transform()
+        # Get the direction of local north at source position (IAU "X" axis)
+        N_IAU = [-np.sin(self._S.dec.rad)*np.cos(self._S.ra.rad),
+                 -np.sin(self._S.dec.rad)*np.sin(self._S.ra.rad),
+                 np.cos(self._S.dec.rad)]
         
-        R_LTP_J2000 = np.matmul(R_IRF_J2000, R_LTP_XYZ)
+        # get the two transformation matrices
+        R_J2000_IRF = self._get_J2000_IRF_transform()
+        R_IRF_LTP = self._get_IRF_LTP_transform()
+        
+        R_J2000_LTP = np.matmul(R_IRF_LTP, R_J2000_IRF)
         
         # Compute the PA offset. This is basically azimuth of LTP Z-axis in J2000
-        Z_LTP_J2000 = np.matmul(R_LTP_J2000, [0, 0, 1])
-        psi = np.arctan2(Z_LTP_J2000[1], Z_LTP_J2000[0])
+        Z_LTP_J2000 = np.matmul(R_J2000_LTP, N_IAU)
+        psi_0 = np.arctan2(Z_LTP_J2000[1], Z_LTP_J2000[0])
+        
+        print("PA offset:", np.rad2deg(psi_0))
 
-        # Return always between 0 to 360
-        if psi < 0:
-            psi += 2*np.pi
-
-        return np.rad2deg(psi) % 180
+        return np.rad2deg(psi_0)
         
     
-    def _get_IRF_J2000_transform(self) -> np.ndarray:
-        """ Returns the transformation matrix from instrument reference frame (IRF) to 
-        J2000 frame.
+    def _get_J2000_IRF_transform(self) -> np.ndarray:
+        """ Returns the transformation matrix from the J2000 frame to 
+        the instrument reference frame (IRF) frame.
         
         see docs for frame defn (add a link to docs)
 
@@ -165,13 +168,13 @@ class PolData(object):
             np.ndarray: Instrument to J2000 transformation matrix
         """
 
-        # Matrix to go from XYZ to J2000 frame
-        return np.array([self._X.get_xyz().value, self._Y.get_xyz().value, self._Z.get_xyz().value]).T
+        # Matrix to go from J2000 to IRF
+        return np.array([self._X.get_xyz().value, self._Y.get_xyz().value, self._Z.get_xyz().value])
 
 
-    def _get_LTP_IRF_transform(self) -> np.ndarray:
-        """ Returns the transformation matrix from the local tangent plane (LTP) frame to 
-        instrument reference frame (IRF).
+    def _get_IRF_LTP_transform(self) -> np.ndarray:
+        """ Returns the transformation matrix from the instrument reference frame (IRF) to the 
+        local tangent plane (LTP) frame.
         
         see docs for frame defn (add a link to docs)
 
@@ -181,17 +184,19 @@ class PolData(object):
         
         # Compute source theta, phi
         # Compute the projection on XYZ
-        ux = self._X.dot(self._S).value
-        uy = self._Y.dot(self._S).value
-        uz = self._Z.dot(self._S).value
+        ux = self._X.dot(self._S.cartesian).value
+        uy = self._Y.dot(self._S.cartesian).value
+        uz = self._Z.dot(self._S.cartesian).value
         
         # Compute the theta,phi
         theta = np.arccos(uz)
         phi = np.arctan2(uy, ux)
         if phi < 0:
             phi += 2*np.pi
+            
+        print("theta, phi:", np.rad2deg(theta), np.rad2deg(phi))
 
-        # Matrix to go from NED to XYZ
+        # Matrix to go from IRF to LTP
         return np.array([[-np.cos(theta) * np.cos(phi), -np.sin(phi), -np.sin(theta) * np.cos(phi)],
                               [-np.cos(theta) * np.sin(phi), np.cos(phi), -np.sin(theta) * np.sin(phi)],
-                              [np.sin(theta), 0, -np.cos(theta)]])
+                              [np.sin(theta), 0, -np.cos(theta)]]).T
