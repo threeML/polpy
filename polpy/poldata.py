@@ -26,8 +26,17 @@ class PolData(object):
         self.polevents = polevents
         self.specrsp = specrsp
         self.polrsp = polrsp
+
+
         
-        if self.specrsp is not None:     
+        if self.polrsp is not None:
+            with fits.open(self.polrsp) as hdu_pol:
+                mc_low=hdu_pol['INEBOUNDS'].data.field('ENERG_LO')
+                mc_high=hdu_pol['INEBOUNDS'].data.field('ENERG_HI')
+                ebounds = np.append(mc_low, mc_high[-1])
+                self.n_channels = hdu_pol['INEBOUNDS'].header['NAXIS2']
+                # self.n_channels = hdu_pol['INEBOUNDS'].header['EBINS'] to be used when response is properly generated
+        elif self.specrsp is not None:    
             with fits.open(self.specrsp) as hdu_spec:
                 # This gets the spectral response
                 mc_low = hdu_spec['MATRIX'].data.field('ENERG_LO')
@@ -55,7 +64,6 @@ class PolData(object):
                 pha_mask = pha_mask1 & pha_mask2
                 # bin the ADC channels is not needed anymore since we have channels already.
                 self.pha = np.digitize(pha[pha_mask], ebounds)
-                self.n_channels = len(self.rsp.ebounds) - 1
             else:
                 pha_mask = (pha >= 0)
             print("PHA:",self.pha)
@@ -111,15 +119,15 @@ class PolData(object):
 
         # bin the scattering_angles
         if self.polrsp is not None:
-            with fits.open(self.polrsp) as hdu_polrsp:
-                example=hdu_polrsp['INEBOUNDS'].data.field('ENERG_LO')    
-                samin = hdu_polrsp['SABOUNDS'].data.field('SA_MIN')
-                samax = hdu_polrsp['SABOUNDS'].data.field('SA_MAX')
+            with fits.open(self.polrsp) as hdu_pol:  
+                samin = hdu_pol['SABOUNDS'].data.field('SA_MIN')
+                samax = hdu_pol['SABOUNDS'].data.field('SA_MAX')
                 scatter_bounds = np.append(samin, samax[-1])
 
                 self.scattering_edges = scatter_bounds
                 self.scattering_angles = np.digitize(self.scattering_angles, scatter_bounds)
                 self.n_scattering_bins= len(self.scattering_edges) - 1
+                #self.n_scattering_bins= hdu_pol['INPAVALS'].header['PABINS'] to be used when response is properly generated
 
         else:
             self.scattering_edges = None
