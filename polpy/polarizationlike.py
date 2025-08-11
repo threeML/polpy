@@ -8,10 +8,7 @@ import numba as nb
 from astromodels import Parameter, Uniform_prior
 from polpy.polresponse import PolResponse
 from threeML import PluginPrototype
-from threeML.io.plotting.step_plot import step_plot
 from threeML.utils.binner import Rebinner
-from threeML.utils.polarization.binned_polarization import \
-    BinnedModulationCurve
 from threeML.utils.statistics.likelihood_functions import (
     poisson_observed_gaussian_background, poisson_observed_poisson_background)
 
@@ -303,146 +300,42 @@ class PolarizationLike(PluginPrototype):
         sa_min, sa_max = self.scattering_boundaries
 
         return sa_max - sa_min
+    
 
-    def display(self,
-                ax=None,
-                show_data=True,
-                show_model=True,
-                show_total=False,
-                model_kwargs={},
-                data_kwargs={},
-                edges=True,
-                min_rate=None):
+    def display(self):
         """
 
-        Display the data, model, or both.
-
-        :param ax:
-        :param show_data:
-        :param show_model:
-        :param show_total:
-        :param model_kwargs:
-        :param data_kwargs:
-        :return:
+        Display the data and model
         """
-
-        tmp = ((self._observed_counts / self._exposure) -
-               self._background_counts / self._background_exposure)
-
-        scattering_edges = np.array(self._observation.edges)
-
-        sa_min, sa_max = scattering_edges[:-1], scattering_edges[1:]
-
-        tmp_db = ((self._observed_counts / self._exposure) - self._background_counts / self._background_exposure) / (
-            sa_max - sa_min)
-
-        old_rebinner = self._rebinner
-
-        if min_rate is not None:
-
-            rebinner = Rebinner(tmp_db, min_rate, mask=None)
-
-            self._apply_rebinner(rebinner)
-
-            net_rate = rebinner.rebin(tmp)
-        else:
-
-            net_rate = tmp
-
-        sa_min, sa_max = self.scattering_boundaries
-
-        if show_total:
-            show_model = False
-            show_data = False
-
-        if ax is None:
-
-            fig, ax = plt.subplots()
-
-        else:
-
-            fig = ax.get_figure()
-
-        xs = self.scattering_boundaries
-
-        if show_total:
-
-            total_rate = self._current_observed_counts / self._exposure / self.bin_widths
-
-            bkg_rate = self._current_background_counts / \
-                self._background_exposure / self.bin_widths
-
-            total_errors = np.sqrt(total_rate)
-
-            if self._background.is_poisson:
-
-                bkg_errors = np.sqrt(bkg_rate)
-
-            else:
-
-                bkg_errors = self._current_background_count_errors / self.bin_widths
-
-            ax.hlines(total_rate, sa_min, sa_max,
-                      color='#7D0505', **data_kwargs)
-            ax.vlines(
-                np.mean([xs], axis=1),
-                total_rate - total_errors,
-                total_rate + total_errors,
-                color='#7D0505',
-                **data_kwargs)
-
-            ax.hlines(bkg_rate, sa_min, sa_max, color='#0D5BAE', **data_kwargs)
-            ax.vlines(
-                np.mean([xs], axis=1), bkg_rate - bkg_errors, bkg_rate + bkg_errors, color='#0D5BAE', **data_kwargs)
-
-        if show_data:
-
-            if self._background.is_poisson:
-
-                errors = np.sqrt((self._current_observed_counts / self._exposure**2 / self.bin_widths**2) +
-                                 (self._current_background_counts / self._background_exposure**2/ self.bin_widths**2))
-
-            else:
-
-                errors = np.sqrt((self._current_observed_counts / self._exposure**2 / self.bin_widths**2) +
-                                 (self._current_background_count_errors / self._background_exposure/ self.bin_widths)**2)
-
-            ax.hlines(net_rate / self.bin_widths,
-                      sa_min, sa_max, **data_kwargs)
-            ax.vlines(
-                np.mean([xs], axis=1), (net_rate - errors) /
-                self.bin_widths, (net_rate + errors) / self.bin_widths,
-                **data_kwargs)
-
-        if show_model:
-
-            if edges:
-
-                step_plot(
-                    ax=ax,
-                    xbins=np.vstack([sa_min, sa_max]).T,
-                    y=self._get_model_counts() / self._exposure / self.bin_widths,
-                    **model_kwargs)
-
-            else:
-
-                y = self._get_model_counts() / self._exposure / self.bin_widths
-                ax.hlines(y, sa_min, sa_max, **model_kwargs)
-
-        ax.set_xlabel('Scattering Angle')
-        ax.set_ylabel('Net Rate (cnt/s/bin)')
-
-        if old_rebinner is not None:
-
-            # There was a rebinner, use it. Note that the rebinner applies the mask by itself
-
-            self._apply_rebinner(old_rebinner)
-
-        else:
-
-            self.remove_rebinning()
-
+        
+        # obs counts + err
+        obs_cnt = self._observed_counts
+        obs_cnt_err = np.sqrt(obs_cnt)
+        
+        # scaled bkg counts to source exposure + err
+        scaled_bkg_cnt = self._background_counts * self._scale
+        scaled_bkg_cnt_err = np.sqrt(self._background_counts) * self._scale
+        
+        # source counts + err (rate)
+        source_cnt = obs_cnt - scaled_bkg_cnt
+        source_cnt_err = np.sqrt(obs_cnt_err**2 + scaled_bkg_cnt_err**2)
+        
+        # get model counts
+        model_cnt = self._get_model_counts()
+        
+        # plot
+        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+        ax.errorbar(self.scattering_boundaries[0], source_cnt,
+                     yerr=source_cnt_err, fmt='.', lw=1.5, capsize=3, label='Data', c='C4')
+        ax.plot(self.scattering_boundaries[0], model_cnt, ds='steps-mid', lw=1.4, c='C3', label='Best-Fit Model')
+        ax.legend(fontsize=12, loc='best')
+        ax.set_xlabel('Scattering Angle (degrees)')
+        ax.set_ylabel('Counts')
+        ax.set_xlim(xmin=-10)
+        fig.tight_layout()
+        
         return fig
+
 
     @property
     def observation(self):
@@ -539,6 +432,7 @@ class PolarizationLike(PluginPrototype):
 
         if self._verbose:
             print("Now using %s bins" % self._rebinner.n_bins)
+
 
     def remove_rebinning(self):
         """
