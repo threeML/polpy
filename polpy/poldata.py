@@ -71,7 +71,7 @@ class PolData(object):
             pha = hdu_evt['POLEVENTS'].data.field('CHANNEL')
             if 'ebounds' in locals():  # check if ebounds was defined
                 # bin the ADC channels is not needed anymore since we have channels already.
-                self.n_channels = len(self.rsp.ebounds) - 1
+                self.n_channels = len(ebounds) - 1
                 pha_mask = (pha >= 0)
                 self.pha = pha[pha_mask]
             print("PHA:",self.pha)
