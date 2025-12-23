@@ -257,18 +257,24 @@ class PolarizationLike(PluginPrototype):
 
         model_counts = self._get_model_counts()
 
-        if self._background.is_poisson:
+        model_counts += self._current_background_counts
+        model_counts *= self._scale
 
-            loglike, bkg_model = poisson_observed_poisson_background(
-                self._current_observed_counts, self._current_background_counts, self._scale, model_counts)
+        loglike = -(model_counts - self._current_observed_counts
+                + self._current_observed_counts * np.log(self._current_observed_counts / model_counts))
 
-        else:
+        # if self._background.is_poisson:
 
-            loglike, bkg_model = poisson_observed_gaussian_background(
-                self._current_observed_counts, self._current_background_counts, self._current_background_count_errors,
-                model_counts)
+        #     loglike, bkg_model = poisson_observed_poisson_background(
+        #         self._current_observed_counts, self._current_background_counts, self._scale, model_counts)
 
-        return np.sum(loglike)
+        # else:
+
+        #     loglike, bkg_model = poisson_observed_gaussian_background(
+        #         self._current_observed_counts, self._current_background_counts, self._current_background_count_errors,
+        #         model_counts)
+
+        return np.nansum(loglike)
 
     def inner_fit(self):
 
