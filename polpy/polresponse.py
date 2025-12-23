@@ -71,6 +71,10 @@ class PolResponse(object):
 
             pol_ang = np.array(hdu_pol['INPAVALS'].data.field('PA_IN'), dtype=np.float64)
             pol_ang = (180 + pol_ang - self._pa_offset) % 180
+            
+            # sort the angles so that we can interpolate correctly
+            sorted_indices = np.argsort(pol_ang)
+            pol_ang = pol_ang[sorted_indices]
 
             # we have 100% pol and 0% pol matrix in the prsp file
             pol_deg = np.array([0., 100.], dtype=np.float64)
@@ -83,6 +87,9 @@ class PolResponse(object):
             bin_center = 0.5 * (bins[:-1] + bins[1:])
 
             polmatrix = hdu_pol['SPECRESP POLMATRIX'].data
+            
+            # we need to sort the polmatrix according to the sorted pol angles
+            polmatrix = polmatrix[:, sorted_indices, :]
             polmatrix = polmatrix.transpose()
 
             uppolmatrix = hdu_pol['SPECRESP UNPOLMATRIX'].data
