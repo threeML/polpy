@@ -17,18 +17,18 @@ set_threeML_style()
 # reading polarization data from AstroSat CZTI and creating polarization plugin
 trigger_time = 0
 # fac3 0
-daksha0_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol0', polevents=f'/data/sujay/polpy/new_sampling/GRB180914B/processed/GRB180914B_PA_068_PF_0.5_face_0_10.0x_dakshapol.pevt',
-                                              polrsp=f'/data/sujay/polpy/new_sampling/GRB180914B/template/face_0/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_0.prsp', specrsp=None,
+daksha0_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol0', polevents=f'/home/polpy/daksha_data/GRB180914B_PF_0.5_1.0x/GRB180914B_PA_068_PF_0.5_face_0_1.0x_dakshapol.pevt',
+                                              polrsp=f'/home/polpy/daksha_data/GRB180914B_response/face_0/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_0.prsp', specrsp=None,
                                                trigger_time=trigger_time)
 
 # face 2
-daksha2_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol2', polevents=f'/data/sujay/polpy/new_sampling/GRB180914B/processed/GRB180914B_PA_068_PF_0.5_face_2_10.0x_dakshapol.pevt',
-                                              polrsp=f'/data/sujay/polpy/new_sampling/GRB180914B/template/face_2/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_2.prsp', specrsp=None,
+daksha2_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol2', polevents=f'/home/polpy/daksha_data/GRB180914B_PF_0.5_1.0x/GRB180914B_PA_068_PF_0.5_face_2_1.0x_dakshapol.pevt',
+                                              polrsp=f'/home/polpy/daksha_data/GRB180914B_response/face_2/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_2.prsp', specrsp=None,
                                                trigger_time=trigger_time)
 
 # face 3
-daksha3_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol3', polevents=f'/data/sujay/polpy/new_sampling/GRB180914B/processed/GRB180914B_PA_068_PF_0.5_face_3_10.0x_dakshapol.pevt',
-                                              polrsp=f'/data/sujay/polpy/new_sampling/GRB180914B/template/face_3/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_3.prsp', specrsp=None,
+daksha3_ts = TimeSeriesBuilder.from_polarization(name='daksha_pol3', polevents=f'/home/polpy/daksha_data/GRB180914B_PF_0.5_1.0x/GRB180914B_PA_068_PF_0.5_face_3_1.0x_dakshapol.pevt',
+                                              polrsp=f'/home/polpy/daksha_data/GRB180914B_response/face_3/DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB180914B_3.prsp', specrsp=None,
                                                 trigger_time=trigger_time)
 
 # face 0
@@ -56,17 +56,25 @@ daksha3_data = daksha3_ts.to_polarizationlike()
 #setting up spectrum model
 band = Band()
 
-band.xp.prior = Uniform_prior(lower_bound=400, upper_bound=500)
+band.xp.prior = Uniform_prior(lower_bound=440, upper_bound=460)
 band.xp.bounds = (None, None)
+band.xp.value = 453
+# band.xp.fixed = True
 
 band.K.bounds = (1E-10, None)
 band.K.prior = Log_uniform_prior(lower_bound=1e-3, upper_bound=1e1)
+band.K.value = 0.056
 
 band.alpha.bounds = (-2.5, 1.0)
 band.alpha.prior = Truncated_gaussian(mu=-0.75, sigma=0.05, lower_bound=-0.85, upper_bound=-0.65)
+band.alpha.value = -0.75
+# band.alpha.fixed = True
 
 band.beta.bounds = (None, -1.5)
 band.beta.prior = Truncated_gaussian(mu=-2.10, sigma=0.05, lower_bound=-2.25, upper_bound=-1.95)
+band.beta.value = -2.10
+# band.beta.fixed = True
+
 #settting up polarization model
 lp = LinearPolarization(50,90)
 lp.angle.prior = Uniform_prior(lower_bound=0.0, upper_bound=180.0)
@@ -79,6 +87,11 @@ ps = PointSource('GRB180914B',0,0, components = [sc])
 combined_model = Model(ps)
 datalist = DataList(daksha0_data, daksha2_data, daksha3_data)
 #datalist = DataList(daksha3_data, daksha2_data)
+
+combined_model.GRB180914B.spectrum.synch.Band.K.free = False
+combined_model.GRB180914B.spectrum.synch.Band.alpha.free = False
+combined_model.GRB180914B.spectrum.synch.Band.beta.free = False
+combined_model.GRB180914B.spectrum.synch.Band.xp.free = False
 
 
 # Setting up sampler and running bayes
@@ -120,3 +133,7 @@ fig=modulationcurve.savefig(f'GRB180914B_face_face2_PF_0.5_modulation_curve.png'
 modulationcurve = daksha3_data.display()
 fig=modulationcurve.savefig(f'GRB180914B_face_face3_PF_0.5_modulation_curve.png')
 
+print(f"Band XP ={combined_model.GRB180914B.spectrum.synch.Band.xp.value}",)
+print(f"Band K ={combined_model.GRB180914B.spectrum.synch.Band.K.value}",)
+print(f"Band Alpha ={combined_model.GRB180914B.spectrum.synch.Band.alpha.value}",)
+print(f"Band Beta ={combined_model.GRB180914B.spectrum.synch.Band.beta.value}",)
