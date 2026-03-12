@@ -13,10 +13,10 @@ set_threeML_style()
 
 
 # Input parameters
-GRB_NAME = "GRB171010A"
-PA = "040"
-PF = "0.8"
-FACES = [12,5,1]
+GRB_NAME = "GRB180103A"
+PA = "122"
+PF = "0.5"
+FACES = [12,11,4]
 DATA_DIR = "/home/polpy/daksha_data"
 TRIGGER_TIME = 0
 
@@ -34,29 +34,29 @@ for face in FACES:
     trigger_time=trigger_time
   )
   
-  ts.set_active_time_interval('-50 - 50')
+  ts.set_active_time_interval('-80 - 80')
   ts.set_background_interval('-245--90', '90-245')
   datalist_items.append(ts.to_polarizationlike())
 
 #setting up spectrum model
 band = Band()
 
-band.xp.prior = Truncated_gaussian(mu=228.77, sigma=10.0, lower_bound=200, upper_bound=300)
+band.xp.prior = Truncated_gaussian(mu=273.00, sigma=10.0, lower_bound=200, upper_bound=350)
 band.xp.bounds = (None, None)
 band.xp.value = 273
 # band.xp.fixed = True
 
 band.K.bounds = (1E-10, None)
 band.K.prior = Log_uniform_prior(lower_bound=1e-3, upper_bound=1e1)
-band.K.value = 0.11693
+band.K.value = 0.028
 
 band.alpha.bounds = (-2.5, 1.0)
-band.alpha.prior = Truncated_gaussian(mu=-0.91, sigma=0.15, lower_bound=-1.5, upper_bound=-0.50)
+band.alpha.prior = Truncated_gaussian(mu=-1.31, sigma=0.2, lower_bound=-2.0, upper_bound=-1.00)
 band.alpha.value = -1.31
 # band.alpha.fixed = True
 
 band.beta.bounds = (None, -1.5)
-band.beta.prior = Truncated_gaussian(mu=-2.28, sigma=0.15, lower_bound=-2.50, upper_bound=-2.00)
+band.beta.prior = Truncated_gaussian(mu=-2.24, sigma=0.15, lower_bound=-2.50, upper_bound=-2.00)
 band.beta.value = -2.24
 # band.beta.fixed = True
 
@@ -67,7 +67,7 @@ lp.degree.prior = Uniform_prior(lower_bound=0.001, upper_bound=100.0)
 
 #adding both component and defining the point source
 sc =SpectralComponent('synch', band, lp)
-ps = PointSource('GRB171010A',0,0, components = [sc])
+ps = PointSource('GRB180103A',0,0, components = [sc])
 
 combined_model = Model(ps)
 datalist = DataList(*datalist_items)
@@ -88,7 +88,7 @@ bayes.sample()
 
 # Save and display results
 faces_str = ''.join(map(str, FACES))
-# bayes.results.write_to(f"Daksha_polarization_results_{GRB_NAME}_joint{faces_str}_PF_{PF}.fits", overwrite=True)
+bayes.results.write_to(f"Daksha_polarization_results_{GRB_NAME}_joint{faces_str}_PF_{PF}.fits", overwrite=True)
 bayes.restore_median_fit()
 bayes.results.display()
 
