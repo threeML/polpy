@@ -82,7 +82,7 @@ combined_model[GRB_NAME].spectrum.synch.Band.xp.free = True
 bayes = BayesianAnalysis(combined_model, datalist)
 bayes.set_sampler("multinest")
 wrapped = [0] * len(combined_model.free_parameters)
-bayes.sampler.setup(n_live_points=250, resume=False, importance_nested_sampling=False,
+bayes.sampler.setup(n_live_points=1000, resume=False, importance_nested_sampling=False,
           verbose=True, wrapped_params=wrapped, chain_name='chains/synch_p2')
 bayes.sample()
 
