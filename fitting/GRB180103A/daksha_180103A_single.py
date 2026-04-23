@@ -13,13 +13,13 @@ from threeML import *
 silence_warnings()
 set_threeML_style()
 
-grb = "GRB180914B"
-pa = "068"
-pf = 0.5
-face =0  # Assuming face is fixed to 0; can be made an argument if needed
+grb = "GRB180103A"
+pa = "122"
+pf = 0.3
+face =4  
 
 # reading polarization data from AstroSat CZTI and creating polarization plugin
-trigger_time = 0
+trigger_time = 0.0
 daksha_ts = TimeSeriesBuilder.from_polarization(name=f'daksha_pol{face}', 
                                                 polevents=f'/home/polpy/daksha_data/{grb}_PF_{pf}_1.0x/{grb}_PA_{pa}_PF_{pf}_face_{face}_1.0x_dakshapol.pevt',
                                                 polrsp=f'/home/polpy/daksha_data/{grb}_response/face_{face}/DAKSHA_POLRSP_EMIN_100_EMAX_1000_{grb}_{face}.prsp', 
@@ -28,29 +28,32 @@ daksha_ts = TimeSeriesBuilder.from_polarization(name=f'daksha_pol{face}',
 
 daksha_ts.set_active_time_interval('-80 - 80')
 daksha_ts.set_background_interval('-245--90', '90-245')
+fig=daksha_ts.view_lightcurve(-250,250)
+fig.savefig(f'{grb}_face_{face}_PF_{pf}_lightcurve.png')
+
 
 daksha_data = daksha_ts.to_polarizationlike()
 
 #setting up spectrum model
 band = Band()
 
-band.xp.prior = Uniform_prior(lower_bound=400, upper_bound=500)
+band.xp.prior = Truncated_gaussian(mu=273.00, sigma=20.0, lower_bound=200, upper_bound=350)
 band.xp.bounds = (None, None)
-band.xp.value = 453
+band.xp.value = 273
 # band.xp.fixed = True
 
 band.K.bounds = (1E-10, None)
 band.K.prior = Log_uniform_prior(lower_bound=1e-3, upper_bound=1e1)
-band.K.value = 0.056
+band.K.value = 0.028
 
 band.alpha.bounds = (-2.5, 1.0)
-band.alpha.prior = Truncated_gaussian(mu=-0.75, sigma=0.15, lower_bound=-0.95, upper_bound=-0.55)
-band.alpha.value = -0.75
+band.alpha.prior = Truncated_gaussian(mu=-1.31, sigma=0.15, lower_bound=-2.0, upper_bound=-1.00)
+band.alpha.value = -1.31
 # band.alpha.fixed = True
 
 band.beta.bounds = (None, -1.5)
-band.beta.prior = Truncated_gaussian(mu=-2.10, sigma=0.15, lower_bound=-2.55, upper_bound=-1.55)
-band.beta.value = -2.10
+band.beta.prior = Truncated_gaussian(mu=-2.24, sigma=0.15, lower_bound=-3.0, upper_bound=-1.55)
+band.beta.value = -2.24
 # band.beta.fixed = True
 
 #settting up polarization model
@@ -60,16 +63,16 @@ lp.degree.prior = Uniform_prior(lower_bound=0.001, upper_bound=100.0)
 
 #adding both component and defining the point source
 sc =SpectralComponent('synch', band, lp)
-ps = PointSource('GRB180914B',0,0, components = [sc])
+ps = PointSource('GRB180103A',0,0, components = [sc])
 
 combined_model = Model(ps)
 datalist = DataList(daksha_data)
 #datalist = DataList(daksha3_data, daksha2_data)
 
-# combined_model.GRB180914B.spectrum.synch.Band.K.free = False
-# combined_model.GRB180914B.spectrum.synch.Band.alpha.free = False
-# combined_model.GRB180914B.spectrum.synch.Band.beta.free = False
-# combined_model.GRB180914B.spectrum.synch.Band.xp.free = False
+# combined_model.GRB180103A.spectrum.synch.Band.K.free = False
+# combined_model.GRB180103A.spectrum.synch.Band.alpha.free = False
+# combined_model.GRB180103A.spectrum.synch.Band.beta.free = False
+# combined_model.GRB180103A.spectrum.synch.Band.xp.free = False
 
 # Setting up sampler and running bayes
 bayes = BayesianAnalysis(combined_model, datalist)

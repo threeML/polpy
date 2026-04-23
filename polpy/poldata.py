@@ -8,7 +8,7 @@ class PolData(object):
 
     def __init__(self, polevents, polrsp, specrsp=None, reference_time=0.0):
         """
-        container class that converts raw POLAR fits data into useful python
+        container class that converts raw polarisation fits data into useful python
         variables
 
         This can build both the polarimetric and spectral data
@@ -66,6 +66,7 @@ class PolData(object):
                 self.pha = np.digitize(pha[pha_mask], ebounds)
             else:
                 pha_mask = (pha >= 0)
+                self.pha = pha[pha_mask]
             print("PHA:",self.pha)
         else:
             pha = hdu_evt['POLEVENTS'].data.field('CHANNEL')
