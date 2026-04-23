@@ -36,7 +36,7 @@ class FastGridInterpolate(object):
 
 class PolResponse(object):
 
-    def __init__(self, response_file, pa_offset, interp_method='harmonic', n_harmonics=2, fine_pa_resolution=0.01):
+    def __init__(self, response_file, pa_offset, interp_method='linear', n_harmonics=2, fine_pa_resolution=0.01):
         """
         Construct the polarisation response from the mission specific polarisation response file.
 
@@ -48,10 +48,41 @@ class PolResponse(object):
         """
         print(response_file)
         self._rsp_file = response_file
-        self._pa_offset = pa_offset
         self.interp_method = interp_method
         self.n_harmonics = n_harmonics
         self.fine_pa_resolution = fine_pa_resolution
+
+        # read and extract necessary arrays from the response file
+        rspHDU = fits.open(self._rsp_file)
+
+        # load energy bouds
+        self.ene_lo = rspHDU['INEBOUNDS'].data.field('ENERG_LO')
+        self.ene_hi = rspHDU['INEBOUNDS'].data.field('ENERG_HI')
+
+        # energy centre
+        self.ene_center = (self.ene_lo + self.ene_hi) / 2.0
+
+        # load input polarization angles
+        self.pol_ang = rspHDU['INPAVALS'].data.field('PA_IN')
+        self.pol_ang = (180 + self.pol_ang - pa_offset) % 180
+
+        # sort the angles so that we can interpolate correctly
+        sorted_indices = np.argsort(self.pol_ang)
+        self.pol_ang = self.pol_ang[sorted_indices]
+
+        # read the polmatrix and sort according to the pol angles
+        self.pol_matrix = rspHDU['SPECRESP POLMATRIX'].data
+        self.pol_matrix = self.pol_matrix[:, sorted_indices, :]
+        self.pol_matrix = self.pol_matrix.transpose()
+
+        # read scattering angle bins
+        samin = rspHDU['SABOUNDS'].data['SA_MIN']
+        samax = rspHDU['SABOUNDS'].data['SA_MAX']
+        self.sa_bin = (samin + samax) / 2.0
+
+        # read the unpol matrix
+        self.unpol_matrix = rspHDU['SPECRESP UNPOLMATRIX'].data
+        self.unpol_matrix = self.unpol_matrix.transpose() # Shape: (N_E, N_SA)
 
         # pre interpolate the response for fitting
 

@@ -1,4 +1,5 @@
 
+from threeML import *
 import warnings
 warnings.simplefilter("ignore")
 import matplotlib.pyplot as plt
@@ -7,7 +8,6 @@ import os
 
 np.seterr(all="ignore")
 
-from threeML import *
 silence_warnings()
 set_threeML_style()
 
