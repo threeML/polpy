@@ -3,28 +3,31 @@ from contextlib import contextmanager
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from scipy.integrate import simpson
+import numba as nb
 
 from astromodels import Parameter, Uniform_prior
-from astromodels.core.model import Model
 from polpy.polresponse import PolResponse
 from threeML import PluginPrototype
 from threeML.utils.binner import Rebinner
+from threeML.utils.statistics.likelihood_functions import (
+    poisson_observed_gaussian_background, poisson_observed_poisson_background)
 
 
 class PolarizationLike(PluginPrototype):
     """
-    Preliminary PolPy polarization class
+    Preliminary POLAR polarization plugin
     """
 
-    def __init__(self, name, observation, background, response, verbose=False):
+    def __init__(self, name, observation, background, response, interval_number=None, verbose=False):
         """
 
-        The Polarization likelihood for PolPy. This plugin is heavily modeled off
+        The Polarization likelihood for POLAR. This plugin is heavily modeled off
         the 3ML dispersion based plugins. It interpolates the spectral photon model
         over the scattering angle bins to allow for spectral + polarization analysis.
 
+
+
+        :param interval_number: The time interval starting from 1.
         :param name: The name of the plugin
         :param observation: The POLAR observation file
         :param background: The POLAR background file
@@ -33,8 +36,8 @@ class PolarizationLike(PluginPrototype):
         :param verbose:
 
         """
+        # attach the required variables
 
-        # initialise required variables
         self._observation = observation
         self._background = background
 
@@ -45,20 +48,17 @@ class PolarizationLike(PluginPrototype):
         self._exposure = observation.exposure
         self._background_exposure = background.exposure
 
-        # for fitting (define vars, to be assigned later)
         self._likelihood_model = None
-        self._pol_angle = None
-        self._pol_degree = None
-
-        # verbose check
-        self._verbose = verbose
+        self._rebinner = None
 
         # now do some double checks
+
         assert len(self._observed_counts) == len(self._background_counts)
 
         self._n_synthetic_datasets = 0
 
         # set up the effective area correction
+
         self._nuisance_parameter = Parameter(
             "cons_%s" % name,
             1.0,
@@ -72,6 +72,7 @@ class PolarizationLike(PluginPrototype):
         nuisance_parameters[self._nuisance_parameter.name] = self._nuisance_parameter
 
         # pass to the plugin proto
+
         super(PolarizationLike, self).__init__(name, nuisance_parameters)
 
         # The following vectors are the ones that will be really used for the computation. At the beginning they just
@@ -82,7 +83,10 @@ class PolarizationLike(PluginPrototype):
         self._current_background_counts = self._background_counts
         self._current_background_count_errors = self._background_count_errors
 
+        self._verbose = verbose
+
         # we can either attach or build a response
+
         assert isinstance(response, str) or isinstance(
             response, PolResponse), 'The response must be a file name or a PolarResponse'
 
@@ -93,6 +97,10 @@ class PolarizationLike(PluginPrototype):
         else:
 
             self._response = PolResponse(response)
+
+        # attach the interpolators to the
+
+        self._all_interp = self._response.interpolators
 
         # we also make sure the lengths match up here
         assert self._response.n_scattering_bins == len(
@@ -143,7 +151,7 @@ class PolarizationLike(PluginPrototype):
 
         return self._nuisance_parameter
 
-    def set_model(self, likelihood_model_instance: Model):
+    def set_model(self, likelihood_model_instance):
         """
         Set the model to be used in the joint minimization. Must be a LikelihoodModel instance.
         :param likelihood_model_instance: instance of Model
@@ -153,6 +161,13 @@ class PolarizationLike(PluginPrototype):
         if likelihood_model_instance is None:
             return
 
+        # if self._source_name is not None:
+
+        #     # Make sure that the source is in the model
+        #     assert self._source_name in likelihood_model_instance.sources, \
+        #                                         "This XYLike plugin refers to the source %s, " \
+        #                                         "but that source is not in the likelihood model" % (self._source_name)
+
         for k, v in likelihood_model_instance.free_parameters.items():
 
             if 'polarization.degree' in k:
@@ -160,21 +175,81 @@ class PolarizationLike(PluginPrototype):
 
             if 'polarization.angle' in k:
                 self._pol_angle = v
-        
-        # assign  the model
+
+        # now we need to get the integral flux
+
+        _, integral = self._get_diff_flux_and_integral(
+            likelihood_model_instance)
+
+        self._integral_flux = integral
+
         self._likelihood_model = likelihood_model_instance
-    
+
+    def _get_diff_flux_and_integral(self, likelihood_model):
+
+        n_point_sources = likelihood_model.get_number_of_point_sources()
+
+        # Make a function which will stack all point sources (OGIP do not support spatial dimension)
+
+        def differential_flux(scattering_edges):
+            fluxes = likelihood_model.get_point_source_fluxes(
+                0, scattering_edges, tag=self._tag)
+
+            # If we have only one point source, this will never be executed
+            for i in range(1, n_point_sources):
+                fluxes += likelihood_model.get_point_source_fluxes(
+                    i, scattering_edges, tag=self._tag)
+
+            return fluxes
+
+        # The following integrates the diffFlux function using Simpson's rule
+        # This assume that the intervals e1,e2 are all small, which is guaranteed
+        # for any reasonable response matrix, given that e1 and e2 are Monte-Carlo
+        # scattering_edges. It also assumes that the function is smooth in the interval
+        # e1 - e2 and twice-differentiable, again reasonable on small intervals for
+        # decent models. It might fail for models with too sharp features, smaller
+        # than the size of the monte carlo interval.
+
+        def integral(e1, e2):
+            # Simpson's rule
+
+            return (e2 - e1) / 6.0 * (differential_flux(e1) + 4 * differential_flux(
+                (e1 + e2) / 2.0) + differential_flux(e2))
+
+        return differential_flux, integral
+
+    def _get_model_rate(self):
+
+        # first we need to get the integrated expectation from the spectrum
+
+        intergal_spectrum = np.array(
+            [self._integral_flux(emin, emax) for emin, emax in zip(self._response.ene_lo, self._response.ene_hi)])
+
+        # we evaluate at the center of the bin. the bin widths are already included
+        eval_points = np.array(
+            [[ene, self._pol_angle.value, self._pol_degree.value] for ene in self._response.energy_mid])
+
+        # expectation = []
+        
+
+        # # create the model counts by summing over energy
+
+        # for i, interpolator in enumerate(self._all_interp):
+        #     rate = np.dot(interpolator(eval_points), intergal_spectrum)
+
+        #     expectation.append(rate)
+
+
+        return _interpolate_all(self._all_interp, intergal_spectrum, eval_points)
+
     def _get_model_counts(self):
 
-        # get the interpolated metrics for current pol_ang and pol_deg for each energy (this will be NE x NScat)
-        interp_rsp = self._response.evaluate_grid_point(self._pol_angle.value, self._pol_degree.value)
+        if self._rebinner is None:
+            model_rate = self._get_model_rate()
 
-        # get model flux and convole it with the interpolated rsp
-        energies = self._response.ene_center
-        model_flx = self._likelihood_model.get_point_source_fluxes(0, energies, tag=self._tag)
+        else:
 
-        # integrate
-        model_rate = simpson(interp_rsp * model_flx[:, None], x=energies, axis=0)
+            model_rate, = self._rebinner.rebin(self._get_model_rate())
 
         return self._nuisance_parameter.value * self._exposure * model_rate
 
@@ -185,10 +260,21 @@ class PolarizationLike(PluginPrototype):
         model_counts += self._current_background_counts
         model_counts *= self._scale
 
-        loglike = -(model_counts - self._current_observed_counts + self._current_observed_counts * np.log(self._current_observed_counts / model_counts))
-        
-        return np.nansum(loglike)
+        loglike = -(model_counts - self._current_observed_counts
+                + self._current_observed_counts * np.log(self._current_observed_counts / model_counts))
 
+        # if self._background.is_poisson:
+
+        #     loglike, bkg_model = poisson_observed_poisson_background(
+        #         self._current_observed_counts, self._current_background_counts, self._scale, model_counts)
+
+        # else:
+
+        #     loglike, bkg_model = poisson_observed_gaussian_background(
+        #         self._current_observed_counts, self._current_background_counts, self._current_background_count_errors,
+        #         model_counts)
+
+        return np.nansum(loglike)
 
     def inner_fit(self):
 
@@ -367,3 +453,19 @@ class PolarizationLike(PluginPrototype):
         self._current_background_counts = self._background_counts
         self._current_background_count_errors = self._background_count_errors
 
+
+
+
+@nb.njit(fastmath=True)
+def _interpolate_all(interpolators, integral_spectrum, eval_points):
+
+    N = len(interpolators)
+    expectation = np.empty(N)
+
+    
+    
+    for n in range(N):
+    
+        expectation[n] = np.dot(interpolators[n].evaluate(eval_points), integral_spectrum )
+
+    return expectation
