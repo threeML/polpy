@@ -25,7 +25,7 @@ class PolData(object):
         hdu_evt = fits.open(self.polevents)
 
         # Extract header info
-        self.mission = hdu_evt[1].header['TELESCOP']
+        self.mission = hdu_evt['POLEVENTS'].header['TELESCOP']
         self.instrument = hdu_evt['POLEVENTS'].header['INSTRUME']
         self.n_channels = hdu_evt['POLEVENTS'].header['NCHANS']
         self.n_scattering_bins = hdu_evt['POLEVENTS'].header['NSABINS']
