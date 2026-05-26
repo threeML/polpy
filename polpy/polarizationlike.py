@@ -189,38 +189,9 @@ class PolarizationLike(PluginPrototype):
         
         return np.nansum(loglike)
 
-
     def inner_fit(self):
 
         return self.get_log_like()
-    
-    @property
-    def scattering_boundaries(self):
-        """
-        Energy boundaries of channels currently in use (rebinned, if a rebinner is active)
-
-        :return: (sa_min, sa_max)
-        """
-
-        scattering_edges = np.array(self._observation.edges)
-
-        sa_min, sa_max = scattering_edges[:-1], scattering_edges[1:]
-
-        # if self._rebinner is not None:
-        #     # Get the rebinned chans. NOTE: these are already masked
-
-        #     sa_min, sa_max = self._rebinner.get_new_start_and_stop(
-        #         sa_min, sa_max)
-
-        return sa_min, sa_max
-
-    @property
-    def bin_widths(self):
-
-        sa_min, sa_max = self.scattering_boundaries
-
-        return sa_max - sa_min
-    
 
     def display(self):
         """
@@ -258,112 +229,29 @@ class PolarizationLike(PluginPrototype):
 
 
     @property
+    def scattering_boundaries(self):
+        """
+        Energy boundaries of channels currently in use (rebinned, if a rebinner is active)
+
+        :return: (sa_min, sa_max)
+        """
+
+        scattering_edges = np.array(self._observation.edges)
+        sa_min, sa_max = scattering_edges[:-1], scattering_edges[1:]
+
+        return sa_min, sa_max
+
+    @property
+    def bin_widths(self):
+
+        sa_min, sa_max = self.scattering_boundaries
+
+        return sa_max - sa_min
+
+    @property
     def observation(self):
         return self._observation
 
     @property
     def background(self):
         return self._background
-
-    @contextmanager
-    def _without_rebinner(self):
-
-        # Store rebinner for later use
-
-        rebinner = self._rebinner
-
-        # Clean mask and rebinning
-
-        self.remove_rebinning()
-
-        # Execute whathever
-
-        yield
-
-        # Restore mask and rebinner (if any)
-
-        if rebinner is not None:
-
-            # There was a rebinner, use it. Note that the rebinner applies the mask by itself
-
-            self._apply_rebinner(rebinner)
-
-    def rebin_on_background(self, min_number_of_counts):
-        """
-        Rebin the spectrum guaranteeing the provided minimum number of counts in each background bin. This is usually
-        required for spectra with very few background counts to make the Poisson profile likelihood meaningful.
-        Of course this is not relevant if you treat the background as ideal, nor if the background spectrum has
-        Gaussian errors.
-
-        The observed spectrum will be rebinned in the same fashion as the background spectrum.
-
-        To neutralize this completely, use "remove_rebinning"
-
-        :param min_number_of_counts: the minimum number of counts in each bin
-        :return: none
-        """
-
-        # NOTE: the rebinner takes care of the mask already
-
-        assert self._background is not None, "This data has no background, cannot rebin on background!"
-
-        rebinner = Rebinner(self._background_counts,
-                            min_number_of_counts, mask=None)
-
-        self._apply_rebinner(rebinner)
-
-    def rebin_on_source(self, min_number_of_counts):
-        """
-        Rebin the spectrum guaranteeing the provided minimum number of counts in each source bin.
-
-        To neutralize this completely, use "remove_rebinning"
-
-        :param min_number_of_counts: the minimum number of counts in each bin
-        :return: none
-        """
-
-        # NOTE: the rebinner takes care of the mask already
-
-        rebinner = Rebinner(self._observed_counts,
-                            min_number_of_counts, mask=None)
-
-        self._apply_rebinner(rebinner)
-
-    def _apply_rebinner(self, rebinner):
-
-        self._rebinner = rebinner
-
-        # Apply the rebinning to everything.
-        # NOTE: the output of the .rebin method are the vectors with the mask *already applied*
-
-        self._current_observed_counts, = self._rebinner.rebin(
-            self._observed_counts)
-
-        if self._background is not None:
-
-            self._current_background_counts, = self._rebinner.rebin(
-                self._background_counts)
-
-            if self._background_count_errors is not None:
-                # NOTE: the output of the .rebin method are the vectors with the mask *already applied*
-
-                self._current_background_count_errors, = self._rebinner.rebin_errors(
-                    self._background_count_errors)
-
-        if self._verbose:
-            print("Now using %s bins" % self._rebinner.n_bins)
-
-
-    def remove_rebinning(self):
-        """
-        Remove the rebinning scheme set with rebin_on_background.
-
-        :return:
-        """
-
-        self._rebinner = None
-
-        self._current_observed_counts = self._observed_counts
-        self._current_background_counts = self._background_counts
-        self._current_background_count_errors = self._background_count_errors
-
