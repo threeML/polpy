@@ -206,11 +206,11 @@ class PolarizationLike(PluginPrototype):
 
         sa_min, sa_max = scattering_edges[:-1], scattering_edges[1:]
 
-        if self._rebinner is not None:
-            # Get the rebinned chans. NOTE: these are already masked
+        # if self._rebinner is not None:
+        #     # Get the rebinned chans. NOTE: these are already masked
 
-            sa_min, sa_max = self._rebinner.get_new_start_and_stop(
-                sa_min, sa_max)
+        #     sa_min, sa_max = self._rebinner.get_new_start_and_stop(
+        #         sa_min, sa_max)
 
         return sa_min, sa_max
 
