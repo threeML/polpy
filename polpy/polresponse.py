@@ -7,6 +7,11 @@ from scipy.optimize import curve_fit
 
 @nb.njit(fastmath=True)
 def harmonic(x, const, ampl1, phi1, ampl2, phi2):
+    """ Define the 2nd degree harmonic function to interpolate response across PAs for given
+        azimuthal bin.
+
+    """    
+
     x = np.deg2rad(x)
     y = const + ampl1*np.sin(x + phi1) + ampl2*np.sin(2*x + phi2)
 
@@ -65,28 +70,27 @@ class PolResponse(object):
 
     def _interpolate_rsp(self):
         """
-        Builds the interpolator for the response. This is currently incredibly slow
-        and should be improved
+        Builds the interpolator for the response. This loops over all energies and each azimuthal bin
+        to fit the 2nd degree harmonic function. The output is the best fit params which can be used to get 
+        response for any PA.
 
         """
 
-        # fit the harmics to the response and ready the interpolator
+        # fit the harmonics to the response and ready the interpolator
         # loop over energies
         for i in range(self.pol_matrix.shape[0]):
             # loop over scattering angles
             for j in range(self.pol_matrix.shape[2]):
-                # pad counts to correctly fit
-                padded_counts = np.pad(self.pol_matrix[i, :, j], (6, 6), mode='wrap')
-                dpol_ang = np.diff(self.pol_ang)[0]
-                padded_pol_ang = np.pad(self.pol_ang, (6, 6), mode='linear_ramp', end_values=(-6*dpol_ang, 6*dpol_ang))
+                # get the counts as func of PA for this az bin
+                counts = self.pol_matrix[i, :, j]
 
                 # get the init params
-                const = padded_counts.mean()
-                ampl =  padded_counts.max() - padded_counts.min()
+                const = counts.mean()
+                ampl =  counts.max() - counts.min()
                 phi = np.pi
 
                 # fit
-                popt, pcov = curve_fit(harmonic, padded_pol_ang, padded_counts, p0=[const, ampl, phi, ampl, phi])
+                popt, pcov = curve_fit(harmonic, self.pol_ang, counts, p0=[const, ampl, phi, ampl, phi])
 
                 # fill the params array
                 self.fit_params[i, j] = tuple(popt)
@@ -104,8 +108,10 @@ class PolResponse(object):
  
     def evaluate_grid_point(self, pol_ang_val, pol_deg_val):
         """
-        pol_ang: The scalar point to evaluate at
-        pol_deg: Degree
+        Evaluate the response at the given polarization angle and degree.
+
+        pol_ang: The polarization angle to evaluate at.
+        pol_deg: The polarization fraction to evaluate at.
         """
 
         # return the interpolated value at given pol_ang
