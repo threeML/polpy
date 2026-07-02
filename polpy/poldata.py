@@ -54,9 +54,9 @@ class PolData(object):
         self.pha = pha[pha_mask]
         self.time = time[pha_mask]
         self.dead_time_fraction = dead_time_fraction[pha_mask]
-        self.scattering_angles = scattering_angles[scat_angle_mask]
-        self.scattering_angle_time = time[scat_angle_mask]
-        self.scattering_angle_dead_time_fraction = dead_time_fraction[scat_angle_mask]
+        self.scattering_angles = scattering_angles[total_mask]
+        self.scattering_angle_time = time[total_mask]
+        self.scattering_angle_dead_time_fraction = dead_time_fraction[total_mask]
 
 
         # read the instrument axis and source direction coordinates
@@ -90,9 +90,11 @@ class PolData(object):
         """
 
         # Get the direction of local north at source position (IAU "X" axis)
-        N_IAU = [-np.sin(self._S.dec.rad)*np.cos(self._S.ra.rad),
-                 -np.sin(self._S.dec.rad)*np.sin(self._S.ra.rad),
-                 np.cos(self._S.dec.rad)]
+        # define local north
+        if self._S.dec >= 0:
+            N_IAU = SkyCoord(180.*u.deg + self._S.ra, 90*u.deg - self._S.dec, frame='icrs', obstime='J2000').cartesian.xyz.value
+        else:
+            N_IAU = SkyCoord(self._S.ra, 90*u.deg + self._S.dec, frame='icrs', obstime='J2000').cartesian.xyz.value
 
         # get the two transformation matrices
         R_J2000_IRF = self._get_J2000_IRF_transform()
@@ -103,8 +105,6 @@ class PolData(object):
         # Compute the PA offset. This is basically azimuth of LTP Z-axis in J2000
         Z_LTP_J2000 = np.matmul(R_J2000_LTP, N_IAU)
         psi_0 = np.arctan2(Z_LTP_J2000[1], Z_LTP_J2000[0])
-
-        print("PA offset:", np.rad2deg(psi_0))
 
         return np.rad2deg(psi_0)
 
@@ -146,7 +146,25 @@ class PolData(object):
 
         print("theta, phi:", np.rad2deg(theta), np.rad2deg(phi))
 
-        # Matrix to go from IRF to LTP
-        return np.array([[-np.cos(theta) * np.cos(phi), -np.sin(phi), -np.sin(theta) * np.cos(phi)],
-                        [-np.cos(theta) * np.sin(phi), np.cos(phi), -np.sin(theta) * np.sin(phi)],
-                        [np.sin(theta), 0, -np.cos(theta)]]).T
+        # Matrix to go from IRF to LTP (NED) frame
+        # get the local north
+        if theta < np.pi/2:
+            north = np.array([np.sin(np.pi/2 - theta) * np.cos(phi + np.pi),
+                              np.sin(np.pi/2 - theta) * np.sin(phi + np.pi),
+                              np.cos(np.pi/2 - theta)])
+        else:
+            north = np.array([np.sin(theta - np.pi/2) * np.cos(phi),
+                              np.sin(theta - np.pi/2) * np.sin(phi),
+                              np.cos(theta - np.pi/2)])
+        
+        # get the local east
+        east = np.array([-np.sin(phi),
+                         np.cos(phi),
+                         0])
+        
+        # get the source direction (for Down component)
+        source = np.array([np.sin(theta) * np.cos(phi),
+                           np.sin(theta) * np.sin(phi), 
+                           np.cos(theta)])
+        
+        return np.array([north, east, -1*source])
