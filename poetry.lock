@@ -3727,7 +3727,7 @@ tests = ["pytest", "pytest-codecov"]
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/threeML/threeML.git"
+url = "https://github.com/threeML/threeML.git"
 reference = "dev"
 resolved_reference = "0d12237416fda4fb63f7b17ceaba4567b09e0f46"
 
@@ -3936,4 +3936,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "355903aa57cf8f668f41e6eb4293f1dbdc0337f935078766c6d512cb423fa94a"
+content-hash = "558ef185bb49b00575d7a14df9cba973251d177cbbda896ba5ec2f4ff0dbbc2b"
