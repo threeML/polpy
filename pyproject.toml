@@ -7,10 +7,10 @@ license = "GPL-3.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
-astropy = "^6.0.1"
-numpy = "^1.26.4"
-scipy = "^1.13.1"
+python = ">=3.12"
+threeML = { git = "git@github.com:threeML/threeML.git", branch = "dev" }
+astromodels = ">=2.5.0"
+PyMultiNest = ">=2.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"
