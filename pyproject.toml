@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12"
-threeML = { git = "git@github.com:threeML/threeML.git", branch = "dev" }
+threeML = { git = "https://github.com/threeML/threeML.git", branch = "dev" }
 astromodels = ">=2.5.0"
 PyMultiNest = ">=2.10"
 
