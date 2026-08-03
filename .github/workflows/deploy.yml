@@ -37,9 +37,7 @@ jobs:
               run: poetry config virtualenvs.create false
 
             - name: Install dependencies
-              run: | 
-                   poetry lock |
-                   poetry install --sync --no-interaction
+              run: poetry install --sync --no-interaction
 
             - name: Package project
               run: poetry build
@@ -70,9 +68,7 @@ jobs:
             run: poetry config virtualenvs.create false
 
           - name: Install dependencies
-            run: |
-                 poetry lock |
-                 poetry install --sync --no-interaction
+            run: poetry install --sync --no-interaction
 
           - name: Package project
             run: poetry build
