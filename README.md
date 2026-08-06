@@ -16,18 +16,15 @@
 
 ## Installation
 
+`polpy` is available on PyPI and uses modern Python packaging via `pyproject.toml`. We recommend installing it inside a virtual environment (using `conda`, `venv`, or your preferred environment manager) to prevent dependency conflicts.
+
+### Standard Installation
+
+To install the latest stable version directly from PyPI, run:
+
 ```bash
-pip install git+https://github.com/threeML/polpy.git
+pip install polpy
 ```
-
-This installs directly from the repository's main branch. `polpy` has the following dependencies (from `pyproject.toml`):
-
-- Python ≥ 3.9
-- astropy ^6.0.1
-- numpy ^1.26.4
-- scipy ^1.13.1
-
-It also relies on [3ML](https://github.com/threeML/threeML) and [astromodels](https://github.com/threeML/astromodels) at runtime, since `polpy` is a plugin for that framework — make sure both are installed in your environment.
 
 ## Package layout
 
