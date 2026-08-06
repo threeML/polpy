@@ -1,4 +1,4 @@
-# polpy
+# PolPy
 
 `polpy` is a universal tool to fit high-energy polarization data, based on `polarpy` ([Burgess, Kole et al. 2019, A&A](https://www.aanda.org/articles/aa/abs/2019/07/aa35056-19/aa35056-19.html)). It can be used for current and future scattering polarimeters, since it works with a standardized data and response format ([`docs/Data_and_Response_Format_For_PolPy.pdf`](docs/Data_and_Response_Format_For_PolPy.pdf)) and a defined IAU convention for the polarization angle ([`docs/Coordinate_Defintions_and_Transforms_For_PolPy.pdf`](docs/Coordinate_Defintions_and_Transforms_For_PolPy.pdf)).
 
