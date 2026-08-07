@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "polpy"
-version = "0.1.0"
+version = "1.0.0"
 description = "3ML plugin for X-/gamma-ray polarimetry"
 authors = ["Sujay Mate <sujay.mate@gmail.com>", "Merlin Kole <merlin.kole@unh.edu>"]
 license = "GPL-3.0"
