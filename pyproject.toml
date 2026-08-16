@@ -21,3 +21,8 @@ pre-commit = "^3.7.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marked tests are excluded by default (pytest -m 'not slow' to skip); run explicitly with pytest -m slow",
+]
