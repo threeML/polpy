@@ -2,7 +2,8 @@
 name = "polpy"
 version = "1.0.0"
 description = "3ML plugin for X-/gamma-ray polarimetry"
-authors = ["Sujay Mate <sujay.mate@gmail.com>", "Merlin Kole <merlin.kole@unh.edu>"]
+authors = ["Sujay Mate <sujay.mate@gmail.com>", "Hancheng Li <Hancheng.Li@unige.ch>", "Utkarsh Pathak <utkarshpathak.07@iitb.ac.in>",
+           "Yashowardhan Rai <yash_rai@iitb.ac.in>", "Nicolas De Angelis <nicolas.deangelis@inaf.it>" , "Varun Bhalerao <varunb@iitb.ac.in>", "Merlin Kole <merlin.kole@unh.edu>"]
 license = "GPL-3.0"
 readme = "README.md"
 
@@ -15,14 +16,9 @@ PyMultiNest = ">=2.10"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"
 pytest-cov = "^5.0.0"
-commitizen = "^3.25.0"
-pre-commit = "^3.7.0"
+pre-commit = "^4.3.0"
+black = "^25.11.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-markers = [
-    "slow: marked tests are excluded by default (pytest -m 'not slow' to skip); run explicitly with pytest -m slow",
-]
