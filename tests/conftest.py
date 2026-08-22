@@ -64,8 +64,12 @@ def mock_pevt_file(tmp_path):
     cols = [
         fits.Column(name="CHANNEL", format="I", array=np.array([1, 2, -1, 4, 5])),
         fits.Column(name="SABIN", format="I", array=np.array([0, 5, 2, -1, 10])),
-        fits.Column(name="DEADFRAC", format="E", array=np.array([0.01, 0.01, 0.01, 0.01, 0.01])),
-        fits.Column(name="TIME", format="D", array=np.array([10.0, 10.5, 11.0, 11.5, 12.0])),
+        fits.Column(
+            name="DEADFRAC", format="E", array=np.array([0.01, 0.01, 0.01, 0.01, 0.01])
+        ),
+        fits.Column(
+            name="TIME", format="D", array=np.array([10.0, 10.5, 11.0, 11.5, 12.0])
+        ),
     ]
     evt_hdu = fits.BinTableHDU.from_columns(cols, header=hdr, name="POLEVENTS")
 
@@ -108,7 +112,9 @@ def mock_prsp_file(tmp_path):
     # this to (N_E, N_PA, N_SA). Values follow the harmonic model itself (with a
     # touch of per-PA variation) so the least-squares fit has a real, non-degenerate
     # solution rather than fitting noise.
-    _true_harmonic = harmonic(pa_in, const=100.0, ampl1=10.0, phi1=0.3, ampl2=5.0, phi2=1.1)
+    _true_harmonic = harmonic(
+        pa_in, const=100.0, ampl1=10.0, phi1=0.3, ampl2=5.0, phi2=1.1
+    )
     pol_matrix_data = np.stack(
         [
             np.stack([_true_harmonic, _true_harmonic + 20.0], axis=-1),

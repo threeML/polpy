@@ -135,7 +135,10 @@ def _build_model(pf, sky_pa):
     band = Band()
     band.xp.bounds = (10.0, 1000.0)
     band.xp.prior = Truncated_gaussian(
-        mu=XP_VAL, sigma=XP_VAL * 0.05, lower_bound=XP_VAL * 0.95, upper_bound=XP_VAL * 1.05
+        mu=XP_VAL,
+        sigma=XP_VAL * 0.05,
+        lower_bound=XP_VAL * 0.95,
+        upper_bound=XP_VAL * 1.05,
     )
     band.xp.value = XP_VAL
 
@@ -300,11 +303,26 @@ JOINT_DATA_DIR = Path(__file__).parent / "data" / "GRB160325A_PA131_PF0.5"
 
 PA_OFFSET_REGRESSION_VALUES = {
     "polar": ("POLAR_160325A-N010-P050-A117.pevt", 42.73256796848862),
-    "daksha_face0": ("GRB160325A_PA_131_PF_0.5_face_0_10.0x_dakshapol.pevt", 14.395386074115402),
-    "daksha_face1": ("GRB160325A_PA_131_PF_0.5_face_1_10.0x_dakshapol.pevt", -32.348659599397834),
-    "daksha_face4": ("GRB160325A_PA_131_PF_0.5_face_4_10.0x_dakshapol.pevt", 20.524149829946854),
-    "daksha_face11": ("GRB160325A_PA_131_PF_0.5_face_11_10.0x_dakshapol.pevt", 179.98621327451008),
-    "daksha_face12": ("GRB160325A_PA_131_PF_0.5_face_12_10.0x_dakshapol.pevt", -93.76014956293814),
+    "daksha_face0": (
+        "GRB160325A_PA_131_PF_0.5_face_0_10.0x_dakshapol.pevt",
+        14.395386074115402,
+    ),
+    "daksha_face1": (
+        "GRB160325A_PA_131_PF_0.5_face_1_10.0x_dakshapol.pevt",
+        -32.348659599397834,
+    ),
+    "daksha_face4": (
+        "GRB160325A_PA_131_PF_0.5_face_4_10.0x_dakshapol.pevt",
+        20.524149829946854,
+    ),
+    "daksha_face11": (
+        "GRB160325A_PA_131_PF_0.5_face_11_10.0x_dakshapol.pevt",
+        179.98621327451008,
+    ),
+    "daksha_face12": (
+        "GRB160325A_PA_131_PF_0.5_face_12_10.0x_dakshapol.pevt",
+        -93.76014956293814,
+    ),
 }
 
 
@@ -369,8 +387,13 @@ def test_grb160325a_joint_mcmc_recovery():
     datalist_items.append(polar_ts.to_polarizationlike())
 
     for face in faces:
-        daksha_pevt = JOINT_DATA_DIR / f"GRB160325A_PA_131_PF_0.5_face_{face}_10.0x_dakshapol.pevt"
-        daksha_prsp = JOINT_DATA_DIR / f"DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB160325A_{face}.prsp"
+        daksha_pevt = (
+            JOINT_DATA_DIR
+            / f"GRB160325A_PA_131_PF_0.5_face_{face}_10.0x_dakshapol.pevt"
+        )
+        daksha_prsp = (
+            JOINT_DATA_DIR / f"DAKSHA_POLRSP_EMIN_100_EMAX_1000_GRB160325A_{face}.prsp"
+        )
         daksha_ts = TimeSeriesBuilder.from_polarization(
             name=f"daksha_pol_face{face}",
             polevents=str(daksha_pevt),
@@ -408,9 +431,9 @@ def test_grb160325a_joint_mcmc_recovery():
     pa_plus = df.loc[angle_row, "positive_error"]
     pa_minus = abs(df.loc[angle_row, "negative_error"])
 
-    assert abs(pf_val - injected_pf) <= max(pf_plus, pf_minus), (
-        f"PF median {pf_val:.1f} not within 1-sigma of injected {injected_pf}"
-    )
-    assert abs(pa_val - injected_pa) <= max(pa_plus, pa_minus), (
-        f"PA median {pa_val:.1f} not within 1-sigma of injected {injected_pa}"
-    )
+    assert abs(pf_val - injected_pf) <= max(
+        pf_plus, pf_minus
+    ), f"PF median {pf_val:.1f} not within 1-sigma of injected {injected_pf}"
+    assert abs(pa_val - injected_pa) <= max(
+        pa_plus, pa_minus
+    ), f"PA median {pa_val:.1f} not within 1-sigma of injected {injected_pa}"

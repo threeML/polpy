@@ -66,7 +66,8 @@ class PolarizationLike(PluginPrototype):
             max_value=1.2,
             delta=0.05,
             free=False,
-            desc="Effective area correction for %s" % name)
+            desc="Effective area correction for %s" % name,
+        )
 
         nuisance_parameters = collections.OrderedDict()
         nuisance_parameters[self._nuisance_parameter.name] = self._nuisance_parameter
@@ -84,7 +85,8 @@ class PolarizationLike(PluginPrototype):
 
         # we can either attach or build a response
         assert isinstance(response, str) or isinstance(
-            response, PolResponse), 'The response must be a file name or a PolarResponse'
+            response, PolResponse
+        ), "The response must be a file name or a PolarResponse"
 
         if isinstance(response, PolResponse):
 
@@ -96,7 +98,8 @@ class PolarizationLike(PluginPrototype):
 
         # we also make sure the lengths match up here
         assert self._response.n_scattering_bins == len(
-            self._observation.counts), 'observation counts shape does not agree with response shape'
+            self._observation.counts
+        ), "observation counts shape does not agree with response shape"
 
     def use_effective_area_correction(self, lower=0.5, upper=1.5):
         """
@@ -110,9 +113,10 @@ class PolarizationLike(PluginPrototype):
         self._nuisance_parameter.free = True
         self._nuisance_parameter.bounds = (lower, upper)
         self._nuisance_parameter.prior = Uniform_prior(
-            lower_bound=lower, upper_bound=upper)
+            lower_bound=lower, upper_bound=upper
+        )
         if self._verbose:
-            print('Using effective area correction')
+            print("Using effective area correction")
 
     def fix_effective_area_correction(self, value=1):
         """
@@ -136,7 +140,7 @@ class PolarizationLike(PluginPrototype):
         self._nuisance_parameter.value = value
 
         if self._verbose:
-            print('Fixing effective area correction')
+            print("Fixing effective area correction")
 
     @property
     def effective_area_correction(self):
@@ -155,23 +159,27 @@ class PolarizationLike(PluginPrototype):
 
         for k, v in likelihood_model_instance.free_parameters.items():
 
-            if 'polarization.degree' in k:
+            if "polarization.degree" in k:
                 self._pol_degree = v
 
-            if 'polarization.angle' in k:
+            if "polarization.angle" in k:
                 self._pol_angle = v
-        
+
         # assign  the model
         self._likelihood_model = likelihood_model_instance
-    
+
     def _get_model_counts(self):
 
         # get the interpolated metrics for current pol_ang and pol_deg for each energy (this will be NE x NScat)
-        interp_rsp = self._response.evaluate_grid_point(self._pol_angle.value, self._pol_degree.value)
+        interp_rsp = self._response.evaluate_grid_point(
+            self._pol_angle.value, self._pol_degree.value
+        )
 
         # get model flux and convole it with the interpolated rsp
         energies = self._response.ene_center
-        model_flx = self._likelihood_model.get_point_source_fluxes(0, energies, tag=self._tag)
+        model_flx = self._likelihood_model.get_point_source_fluxes(
+            0, energies, tag=self._tag
+        )
 
         # integrate
         model_rate = simpson(interp_rsp * model_flx[:, None], x=energies, axis=0)
@@ -185,8 +193,13 @@ class PolarizationLike(PluginPrototype):
         model_counts += self._current_background_counts
         model_counts *= self._scale
 
-        loglike = -(model_counts - self._current_observed_counts + self._current_observed_counts * np.log(self._current_observed_counts / model_counts))
-        
+        loglike = -(
+            model_counts
+            - self._current_observed_counts
+            + self._current_observed_counts
+            * np.log(self._current_observed_counts / model_counts)
+        )
+
         return np.nansum(loglike)
 
     def inner_fit(self):
@@ -198,35 +211,49 @@ class PolarizationLike(PluginPrototype):
 
         Display the data and model
         """
-        
+
         # obs counts + err
         obs_cnt = self._observed_counts
         obs_cnt_err = np.sqrt(obs_cnt)
-        
+
         # scaled bkg counts to source exposure + err
         scaled_bkg_cnt = self._background_counts * self._scale
         scaled_bkg_cnt_err = np.sqrt(self._background_counts) * self._scale
-        
+
         # source counts + err (rate)
         source_cnt = obs_cnt - scaled_bkg_cnt
         source_cnt_err = np.sqrt(obs_cnt_err**2 + scaled_bkg_cnt_err**2)
-        
+
         # get model counts
         model_cnt = self._get_model_counts()
-        
+
         # plot
         fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-        ax.errorbar(self.scattering_boundaries[0], source_cnt,
-                     yerr=source_cnt_err, fmt='.', lw=1.5, capsize=3, label='Data', c='C4')
-        ax.plot(self.scattering_boundaries[0], model_cnt, ds='steps-mid', lw=1.4, c='C3', label='Best-Fit Model')
-        ax.legend(fontsize=12, loc='best')
-        ax.set_xlabel('Scattering Angle (degrees)')
-        ax.set_ylabel('Counts')
+        ax.errorbar(
+            self.scattering_boundaries[0],
+            source_cnt,
+            yerr=source_cnt_err,
+            fmt=".",
+            lw=1.5,
+            capsize=3,
+            label="Data",
+            c="C4",
+        )
+        ax.plot(
+            self.scattering_boundaries[0],
+            model_cnt,
+            ds="steps-mid",
+            lw=1.4,
+            c="C3",
+            label="Best-Fit Model",
+        )
+        ax.legend(fontsize=12, loc="best")
+        ax.set_xlabel("Scattering Angle (degrees)")
+        ax.set_ylabel("Counts")
         ax.set_xlim(xmin=-10)
         fig.tight_layout()
-        
-        return fig
 
+        return fig
 
     @property
     def scattering_boundaries(self):

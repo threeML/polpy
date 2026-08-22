@@ -40,8 +40,13 @@ def _build_polar_plugin(real_data_paths):
 def test_real_data_loading_and_datalist_building(real_data_paths):
     """Tests that real .pevt and .prsp files can be parsed by TimeSeriesBuilder,
     converted to a PolarizationLike plugin, and combined into a 3ML DataList."""
-    if not real_data_paths["polar_pevt"].exists() or not real_data_paths["polar_prsp"].exists():
-        pytest.skip("Real sample data files not found in tests/data/. Skipping real data test.")
+    if (
+        not real_data_paths["polar_pevt"].exists()
+        or not real_data_paths["polar_prsp"].exists()
+    ):
+        pytest.skip(
+            "Real sample data files not found in tests/data/. Skipping real data test."
+        )
 
     plugin = _build_polar_plugin(real_data_paths)
     datalist = DataList(plugin)
@@ -53,8 +58,13 @@ def test_real_data_joint_likelihood_evaluation(real_data_paths):
     """Tests full model setup (Band spectrum + LinearPolarization) against real
     data and evaluates the plugin's log-likelihood to ensure spectral +
     polarization interpolation executes cleanly without NaNs."""
-    if not real_data_paths["polar_pevt"].exists() or not real_data_paths["polar_prsp"].exists():
-        pytest.skip("Real sample data files not found in tests/data/. Skipping real data test.")
+    if (
+        not real_data_paths["polar_pevt"].exists()
+        or not real_data_paths["polar_prsp"].exists()
+    ):
+        pytest.skip(
+            "Real sample data files not found in tests/data/. Skipping real data test."
+        )
 
     plugin = _build_polar_plugin(real_data_paths)
 
