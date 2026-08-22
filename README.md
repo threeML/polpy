@@ -9,7 +9,6 @@
 - [Package layout](#package-layout)
 - [Quick start](#quick-start)
 - [Data and response file formats](#data-and-response-file-formats)
-- [Citing](#citing)
 - [License](#license)
 - [Authors](#authors)
 
@@ -36,10 +35,6 @@ polpy/
 ├── docs/
 │   ├── Data_and_Response_Format_For_PolPy.pdf
 │   └── Coordinate_Defintions_and_Transforms_For_PolPy.pdf
-├── examples/
-│   ├── example.py                 # loading and corner-plotting saved fit results
-│   ├── polar_GRB170114A.py        # full joint POLAR + Fermi/GBM spectro-polarimetric fit
-│   └── verify_czti_pol_fit.py     # cross-check of CZTI polarization fit against direct simulation
 └── tests/                    # pytest unit tests
 ```
 
@@ -57,4 +52,4 @@ Two reference documents ship with the repo:
 
 ## Authors
 
-Sujay Mate, Hancheng Li, Utkarsh Pathak, Yashowardhan Rai, Nicholas De Angelis, Merlin Kole, Varun Bhalerao.
+Sujay Mate, Hancheng Li, Utkarsh Pathak, Yashowardhan Rai, Nicholas De Angelis, Varun Bhalerao, Merlin Kole.
