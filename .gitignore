@@ -1,3 +1,8 @@
+# Test coverage reports
+coverage.xml
+.coverage
+htmlcov/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
