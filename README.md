@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/threeML/polpy/graph/badge.svg)](https://codecov.io/gh/threeML/polpy)
+
 # PolPy
 
 `polpy` is a universal tool developed to analyse high-energy polarization data from scattering polarimeters. Based on [3ML](https://github.com/threeML/threeML), it is a generalization of the `polarpy` ([Burgess, Kole et al. 2019, A&A](https://www.aanda.org/articles/aa/abs/2019/07/aa35056-19/aa35056-19.html)) tool that was developed for POLAR analysis. It can be used for current and future scattering polarimeters, provided standardized data and response format ([`docs/Data_and_Response_Format_For_PolPy.pdf`](docs/Data_and_Response_Format_For_PolPy.pdf)) and a defined coordinate convention are followed ([`docs/Coordinate_Defintions_and_Transforms_For_PolPy.pdf`](docs/Coordinate_Defintions_and_Transforms_For_PolPy.pdf)).
