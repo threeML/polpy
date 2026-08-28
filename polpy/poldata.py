@@ -84,7 +84,7 @@ class PolData(object):
         see docs for frame defn (add a link to docs)
 
         Returns:
-            float: Polarisation angle offset between J2000 and local tangent frame.
+            float: Polarisation angle offset between IAU and instrument local tangent frame.
         """
 
         # Get the direction of local north at source position (IAU "X" axis)
@@ -103,13 +103,13 @@ class PolData(object):
 
         # get the two transformation matrices
         R_J2000_IRF = self._get_J2000_IRF_transform()
-        R_IRF_LTP = self._get_IRF_LTP_transform()
+        R_IRF_ILTP = self._get_IRF_ILTP_transform()
 
-        R_J2000_LTP = np.matmul(R_IRF_LTP, R_J2000_IRF)
+        R_J2000_ILTP = np.matmul(R_IRF_ILTP, R_J2000_IRF)
 
-        # Compute the PA offset. This is basically azimuth of LTP Z-axis in J2000
-        Z_LTP_J2000 = np.matmul(R_J2000_LTP, N_IAU)
-        psi_0 = np.arctan2(Z_LTP_J2000[1], Z_LTP_J2000[0])
+        # Compute the PA offset.
+        N_ILTP_IAU = np.matmul(R_J2000_ILTP, N_IAU)
+        psi_0 = np.arctan2(N_ILTP_IAU[1], N_ILTP_IAU[0])
 
         return np.rad2deg(psi_0)
 
@@ -128,14 +128,14 @@ class PolData(object):
             [self._X.get_xyz().value, self._Y.get_xyz().value, self._Z.get_xyz().value]
         )
 
-    def _get_IRF_LTP_transform(self) -> np.ndarray:
+    def _get_IRF_ILTP_transform(self) -> np.ndarray:
         """Returns the transformation matrix from the instrument reference frame (IRF) to the
-        local tangent plane (LTP) frame.
+        instrument local tangent plane (ILTP) frame.
 
         see docs for frame defn (add a link to docs)
 
         Returns:
-            np.ndarray: LTP to IRF transformation matrix
+            np.ndarray: ILTP to IRF transformation matrix
         """
 
         # Compute source theta, phi
@@ -152,7 +152,7 @@ class PolData(object):
 
         print("theta, phi:", np.rad2deg(theta), np.rad2deg(phi))
 
-        # Matrix to go from IRF to LTP (NED) frame
+        # Matrix to go from IRF to ILTP frame
         # get the local north
         if theta < np.pi / 2:
             north = np.array(

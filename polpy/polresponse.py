@@ -25,7 +25,7 @@ class PolResponse(object):
         Construct the polarisation response from the mission specific polarisation response file.
 
         :param response_file: Polarisation response file in the defined format (.prsp)
-        :param pa_offset: Offset to be added to convert templates from LTP to J2000
+        :param pa_offset: Offset to be subtracted to convert templates from ILTP to IAU
         """
         print(response_file)
         self._rsp_file = response_file
