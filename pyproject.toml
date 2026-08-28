@@ -9,7 +9,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12"
-threeML = ">=2.5.0"
+threeML = ">=2.6.1.dev2"
 astromodels = ">=2.5.0"
 PyMultiNest = ">=2.10"
 

@@ -970,26 +970,6 @@ files = [
 ]
 
 [[package]]
-name = "dynesty"
-version = "3.1.0"
-description = "A dynamic nested sampling package for computing Bayesian posteriors and evidences."
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "dynesty-3.1.0-py3-none-any.whl", hash = "sha256:4e5b77bb261abdcb98e3a538d7498a94d5882a848f0ea46924b404396ef036d5"},
-    {file = "dynesty-3.1.0.tar.gz", hash = "sha256:851717431f04f749bca45e86704c28fecf9f3b10f85a2a69820b26e42cefab68"},
-]
-
-[package.dependencies]
-matplotlib = "*"
-numpy = ">=1.17.0"
-scipy = ">=1.4.0"
-
-[package.extras]
-dev = ["coveralls", "dill", "h5py", "ipyparallel", "jupyter", "numpydoc", "pylint", "pytest", "pytest-cov", "pytest-xdist", "sphinx", "sphinx-rtd-theme", "tqdm"]
-
-[[package]]
 name = "emcee"
 version = "3.1.6"
 description = "The Python ensemble sampling toolkit for MCMC"
@@ -1561,28 +1541,6 @@ files = [
 pygments = "*"
 
 [[package]]
-name = "ipywidgets"
-version = "8.1.8"
-description = "Jupyter interactive widgets"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "ipywidgets-8.1.8-py3-none-any.whl", hash = "sha256:ecaca67aed704a338f88f67b1181b58f821ab5dc89c1f0f5ef99db43c1c2921e"},
-    {file = "ipywidgets-8.1.8.tar.gz", hash = "sha256:61f969306b95f85fba6b6986b7fe45d73124d1d9e3023a8068710d47a22ea668"},
-]
-
-[package.dependencies]
-comm = ">=0.1.3"
-ipython = ">=6.1.0"
-jupyterlab_widgets = ">=3.0.15,<3.1.0"
-traitlets = ">=4.3.1"
-widgetsnbextension = ">=4.0.14,<4.1.0"
-
-[package.extras]
-test = ["ipykernel", "jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
-
-[[package]]
 name = "jaraco-classes"
 version = "3.4.0"
 description = "Utility functions for Python class constructs"
@@ -1736,18 +1694,6 @@ traitlets = ">=5.3"
 [package.extras]
 docs = ["intersphinx-registry", "myst-parser", "pydata-sphinx-theme", "sphinx-autodoc-typehints", "sphinxcontrib-spelling", "traitlets"]
 test = ["ipykernel", "pre-commit", "pytest (<9)", "pytest-cov", "pytest-timeout"]
-
-[[package]]
-name = "jupyterlab-widgets"
-version = "3.0.16"
-description = "Jupyter interactive widgets for JupyterLab"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "jupyterlab_widgets-3.0.16-py3-none-any.whl", hash = "sha256:45fa36d9c6422cf2559198e4db481aa243c7a32d9926b500781c830c80f7ecf8"},
-    {file = "jupyterlab_widgets-3.0.16.tar.gz", hash = "sha256:423da05071d55cf27a9e602216d35a3a65a3e41cdf9c5d3b643b814ce38c19e0"},
-]
 
 [[package]]
 name = "keyring"
@@ -3692,48 +3638,46 @@ files = [
 
 [[package]]
 name = "threeml"
-version = "2.5.0"
+version = "2.6.1.dev2"
 description = "The Multi-Mission Maximum Likelihood framework"
 optional = false
 python-versions = ">=3.9.0"
 groups = ["main"]
 files = [
-    {file = "threeml-2.5.0-py3-none-any.whl", hash = "sha256:af13ce68de2617d3b9f96e80d91bceea7dbfff9f29f70358151a95186005223b"},
-    {file = "threeml-2.5.0.tar.gz", hash = "sha256:256b30757cc30cc7c6fea9d0ecb36bb62af1005bed5654345c0134ecdf454f29"},
+    {file = "threeml-2.6.1.dev2-py3-none-any.whl", hash = "sha256:9bcb45635fbe31243fe8a37e7a7f211e873c507ea1ec424f5ead452a55c5e630"},
+    {file = "threeml-2.6.1.dev2.tar.gz", hash = "sha256:a4c05a931261d6a35fc1d761236765e6283b3998ccbe97497a7a289d3410e8df"},
 ]
 
 [package.dependencies]
 astromodels = "*"
 astropy = "*"
 astroquery = "*"
-colorama = "*"
 corner = "*"
 dill = "*"
-dynesty = "*"
-emcee = ">=3"
+emcee = ">3"
 iminuit = ">=2.0"
 ipyparallel = "*"
 ipython = "*"
-ipywidgets = "*"
 joblib = "*"
 matplotlib = "*"
 numba = "*"
 numdifftools = "*"
 numexpr = "*"
-numpy = ">=1.16"
+numpy = ">=1.26"
 omegaconf = "*"
 packaging = "*"
 pandas = "*"
 pyyaml = ">=5.1"
 requests = "*"
 rich = "*"
-scipy = ">=1.4"
-speclite = ">=0.11"
-tqdm = ">=4.56.0"
+scipy = ">=1.13"
+speclite = ">=0.20"
+tqdm = ">=4.67.2"
 uncertainties = "*"
 
 [package.extras]
 docs = ["nbsphinx", "sphinx (>=1.4)", "sphinx-autoapi", "sphinx_rtd_theme"]
+samplers = ["chainconsumer (>=1)", "dynesty", "emcee (>=3)", "pymultinest", "ultranest", "zeus-mcmc"]
 tests = ["pytest", "pytest-codecov"]
 
 [[package]]
@@ -3926,19 +3870,7 @@ files = [
     {file = "webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"},
 ]
 
-[[package]]
-name = "widgetsnbextension"
-version = "4.0.15"
-description = "Jupyter interactive widgets for Jupyter Notebook"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "widgetsnbextension-4.0.15-py3-none-any.whl", hash = "sha256:8156704e4346a571d9ce73b84bee86a29906c9abfd7223b7228a28899ccf3366"},
-    {file = "widgetsnbextension-4.0.15.tar.gz", hash = "sha256:de8610639996f1567952d763a5a41af8af37f2575a41f9852a38f947eb82a3b9"},
-]
-
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "1e224e52ed1f32a5151371e20d6453ce567d98a4e3cf43159abf852325340c5d"
+content-hash = "b4c6753aa6f858737b7db1e5fceb7b7650c506594bdf7eec361d23c59bb8b3ed"
