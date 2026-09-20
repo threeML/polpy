@@ -1,3 +1,8 @@
+# some data files
+examples/chains
+examples/*.png
+examples/*.fits
+
 # Test coverage reports
 coverage.xml
 .coverage
@@ -10,16 +15,6 @@ __pycache__/
 
 # C extensions
 *.so
-
-/chains
-/fitting
-/publication_plots
-/examples
-
-*.pdf
-#data and outputs
-*.fits
-*.png
 
 # Distribution / packaging
 .Python
